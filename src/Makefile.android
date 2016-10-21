@@ -1,0 +1,16 @@
+CC=/opt/diablo-android-gcc-toolchain/bin/arm-linux-androideabi-gcc
+
+PLATFORM=android
+THIRD_PARTY=/opt/3rd_party
+
+CFLAGS=	-I. \
+		-I$(THIRD_PARTY)/libwebsockets/$(PLATFORM)/include \
+		-Wall \
+		-g \
+		-mfloat-abi=softfp -msoft-float -mfpu=neon
+
+all:
+	$(CC) $(CFLAGS) -fpic -c ascl.c -o ascl.o
+
+clean:
+	rm *.o -f
