@@ -33,4 +33,5 @@ done
 
 echo -e "${CGREEN} ASCL build process COMPLETED${CDEFAULT}\n"
 
-[ $(which tree) != '' ] &&  tree -h ${SCRIPT_DIR}/prebuilt
+TREE_OK=$(which tree)
+[ "${TREE_OK}" != '' ] && tree -h ${SCRIPT_DIR}/prebuilt
