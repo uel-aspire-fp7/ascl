@@ -502,7 +502,7 @@ int _asclWebSocketCommunicate(int wait_for_response, struct libwebsocket_context
 		return ASCL_ERROR;
 	}
 
-	lwsl_notice("ASCL - _asclWebSocketCommunicate(%s) terminated\n", application_id);
+	//lwsl_notice("ASCL - _asclWebSocketCommunicate(%s) terminated\n", application_id);
 
 	return ASCL_SUCCESS;
 }
@@ -521,7 +521,7 @@ int asclWebSocketSend(struct libwebsocket_context* context, char* application_id
 	if (NULL == context)
 		return ASCL_ERROR;
 
-	lwsl_notice("ASCL - asclWebSocketSend(%s, %d) entered\n", application_id, technique_id);
+	//lwsl_notice("ASCL - asclWebSocketSend(%s, %d) entered\n", application_id, technique_id);
 
 	return _asclWebSocketCommunicate(0, context, application_id, technique_id, buffer, buffer_length, NULL, 0);
 }
@@ -530,7 +530,7 @@ int asclWebSocketExchange(struct libwebsocket_context* context, char* applicatio
 	if (NULL == context)
 		return ASCL_ERROR;
 
-	lwsl_notice("ASCL - asclWebSocketExchange(%s, %d) entered\n", application_id, technique_id);
+	//lwsl_notice("ASCL - asclWebSocketExchange(%s, %d) entered\n", application_id, technique_id);
 
 	return _asclWebSocketCommunicate(1, context, application_id, technique_id, buffer, buffer_length, response, response_length);
 }
