@@ -10,6 +10,7 @@ CGREEN='\e[32m'
 
 cd $(dirname $0)
 SCRIPT_DIR=$(pwd)
+TARGET_DIR=$1
 
 echo -e "${CGREEN} ASCL build process STARTED${CDEFAULT}"
 
@@ -28,10 +29,11 @@ cd $(dirname $0)/src
 # library build process
 for platform in linux android linux_x86; do
     make -f Makefile.${platform} clean all > /dev/null
-    cp ascl.o ../prebuilt/${platform}/
+    mkdir -p ${TARGET_DIR}/${platform}/
+    mv ascl.o ${TARGET_DIR}/${platform}/
 done
 
 echo -e "${CGREEN} ASCL build process COMPLETED${CDEFAULT}\n"
 
 TREE_OK=$(which tree)
-[ "${TREE_OK}" != '' ] && tree -h ${SCRIPT_DIR}/prebuilt
+[ "${TREE_OK}" != '' ] && tree -h ${TARGET_DIR}
