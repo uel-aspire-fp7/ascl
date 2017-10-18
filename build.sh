@@ -19,11 +19,6 @@ if [ ! -e /opt/3rd_party ]; then
     exit
 fi
 
-if [ ! -e /opt/code_mobility ]; then
-    echo "Please run FRAMEWORK/select-tool-version.sh -t code_mobility -v VERSION"
-    exit
-fi
-
 cd $(dirname $0)/src
 
 # library build process
