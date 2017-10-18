@@ -1,34 +1,33 @@
 #!/bin/bash
-
 set -o errexit
 set -o pipefail
+set -o nounset
+#set -o xtrace
 
-CDEFAULT='\e[39m'
-CRED='\e[31m'
-CYELLOW='\e[33m'
-CGREEN='\e[32m'
-
-cd $(dirname $0)
-SCRIPT_DIR=$(pwd)
-TARGET_DIR=$1
-
-echo -e "${CGREEN} ASCL build process STARTED${CDEFAULT}"
+# Get the repo and build directories, go to the build directory
+repo_dir=$(dirname $0)
+build_dir=$1
+mkdir -p $build_dir
+cd $build_dir
 
 if [ ! -e /opt/3rd_party ]; then
-    echo "Please run FRAMEWORK/select-tool-version.sh -t 3rd_party -v VERSION"
+    echo "Directory 3rd_party not present!"
     exit
 fi
 
-cd $(dirname $0)/src
+# Create extra symlinks
+ln -s $repo_dir/src $build_dir/include
+ln -s $repo_dir/src $build_dir/src
+ln -s $repo_dir/src/aspire-portal $build_dir/
 
-# library build process
+# Create the objects
+cd $build_dir/src
+obj_dir=$build_dir/obj
 for platform in linux android linux_x86; do
     make -f Makefile.${platform} clean all > /dev/null
-    mkdir -p ${TARGET_DIR}/${platform}/
-    mv ascl.o ${TARGET_DIR}/${platform}/
+    mkdir -p ${obj_dir}/${platform}/
+    mv ascl.o ${obj_dir}/${platform}/
 done
 
-echo -e "${CGREEN} ASCL build process COMPLETED${CDEFAULT}\n"
-
-TREE_OK=$(which tree)
-[ "${TREE_OK}" != '' ] && tree -h ${TARGET_DIR}
+# Select the x86 server
+ln -s $obj_dir/linux_x86 $obj_dir/serverlinux
