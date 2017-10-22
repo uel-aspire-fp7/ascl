@@ -9,4 +9,4 @@ sudo service nginx start
 killall -SIGINT uwsgi 2>/dev/null
 
 # start the ASPIRE Portal
-/usr/local/bin/uwsgi aspire-portal.ini 2>>/opt/ASCL/aspire-portal/aspire_service.log &
+/usr/local/bin/uwsgi aspire-portal.ini 2>>/opt/online_backends/aspire_service.log &
