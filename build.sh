@@ -23,11 +23,6 @@ ln -s $repo_dir/src/aspire-portal $build_dir/
 # Create the objects
 cd $build_dir/src
 obj_dir=$build_dir/obj
-for platform in linux android linux_x86; do
-    make -f Makefile.${platform} clean all > /dev/null
-    mkdir -p ${obj_dir}/${platform}/
-    mv ascl.o ${obj_dir}/${platform}/
-done
-
-# Select the x86 server
-ln -s $obj_dir/linux_x86 $obj_dir/serverlinux
+make -f Makefile clean all > /dev/null
+mkdir -p ${obj_dir}/serverlinux
+mv ascl.o ${obj_dir}/serverlinux
