@@ -142,10 +142,10 @@ int session_index_by_application_id (char* application_id, int technique_id) {
 /*
  * Exchange response helper
  */
-int _asclWebSocketResponseToExchange(struct libwebsocket_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length, void* response, size_t* response_length) {
+int _asclWebSocketResponseToExchange(struct lws_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length, void* response, size_t* response_length) {
 
 	// prepare user context for sending callback
-	struct ascl_context_buffer* user_context = (struct ascl_context_buffer*)libwebsocket_context_user(context);
+	struct ascl_context_buffer* user_context = (struct ascl_context_buffer*)lws_context_user(context);
 	struct per_session_data__accl* session;
 
 	// buffer size check
@@ -166,10 +166,10 @@ int _asclWebSocketResponseToExchange(struct libwebsocket_context* context, char*
 			strcpy((char*)&user_context->application_id, application_id);
 
 			// request a write session to libwebsocket for ACCL communication to a specific client
-			libwebsocket_callback_on_writable(context, session->wsi);
+			lws_callback_on_writable(session->wsi);
 
 			while (1 == user_context->send_in_progress)
-				libwebsocket_service(context, 50);
+				lws_service(context, 50);
 
 		} else {
 			lwsl_err("ASCL - _asclWebSocketCommunicate() invalid AID %s\n", application_id);
@@ -188,15 +188,15 @@ int _asclWebSocketResponseToExchange(struct libwebsocket_context* context, char*
 }
 
 int static callback_accl_communication(
-		struct libwebsocket_context *context,
-		struct libwebsocket *wsi,
-		enum libwebsocket_callback_reasons reason,
+		struct lws *wsi,
+		enum lws_callback_reasons reason,
 		void *user, 		// <-- user data
 		void *in, 			// <-- reveived buffer
 		size_t len) {
 	int m, i;
 
-	struct ascl_context_buffer* user_context = (struct ascl_context_buffer*)libwebsocket_context_user(context);
+  struct lws_context *context = lws_get_context(wsi);
+	struct ascl_context_buffer* user_context = (struct ascl_context_buffer*)lws_context_user(context);
 
 	// output buffer has to be pre and post padded
 	// [ ... PRE-PADDING ... | ACTUAL BUFFER CONTENT | ... POST-PADDING ... ]
@@ -279,7 +279,7 @@ int static callback_accl_communication(
 			memcpy (write_buffer_pointer, user_context->buffer_ptr, user_context->buffer_size);
 
 			// send data though the channel
-			m = libwebsocket_write(wsi, write_buffer_pointer, user_context->buffer_size, LWS_WRITE_BINARY);
+			m = lws_write(wsi, write_buffer_pointer, user_context->buffer_size, LWS_WRITE_BINARY);
 
 			if (m < user_context->buffer_size) {
 				lwsl_err("ASCL - Writing error: expected %d bytes, %d actually\n", user_context->buffer_size, m);
@@ -341,24 +341,26 @@ int static callback_accl_communication(
 }
 
 /* list of supported protocols and callbacks */
-static struct libwebsocket_protocols protocols[] = {
+static struct lws_protocols protocols[] = {
 	{
 		"accl-communication-protocol",
 		callback_accl_communication,
 		sizeof(struct per_session_data__accl),
 		ASCL_WS_MAX_BUFFER_SIZE,
+    0,
+    NULL
 	},
-	{ NULL, NULL, 0, 0 } /* terminator */
+	{ NULL, NULL, 0, 0, 0, NULL } /* terminator */
 };
 
 /*
 	ASCL shutdown
 */
-int asclWebSocketShutdown(struct libwebsocket_context* context) {
+int asclWebSocketShutdown(struct lws_context* context) {
 
 	if (NULL != context) {
-		libwebsocket_cancel_service(context);
-		libwebsocket_context_destroy(context);
+		lws_cancel_service(context);
+		lws_context_destroy(context);
 	}
 	
 	lwsl_notice("ASCL - WebSockets Shutdown\n");
@@ -405,11 +407,11 @@ int acclGetWebSocketPort(int technique_id) {
 /*
 	ASCL initialization
 */
-struct libwebsocket_context* asclWebSocketInit(TECHNIQUE_ID technique_id) {
+struct lws_context* asclWebSocketInit(TECHNIQUE_ID technique_id) {
 	struct lws_context_creation_info info;
 	struct ascl_context_buffer* user_context;
-	struct libwebsocket_context *context;
-	struct libwebsocket_protocols *context_protocols;
+	struct lws_context *context;
+	struct lws_protocols *context_protocols;
 
     // buffer information
     user_context = (struct ascl_context_buffer*)malloc(sizeof(struct ascl_context_buffer));
@@ -430,8 +432,8 @@ struct libwebsocket_context* asclWebSocketInit(TECHNIQUE_ID technique_id) {
 
 	lwsl_notice("ASPIRE Server Communication Logic - WebSockets Initialization (technique id: %d)\n", technique_id);
 
-	context_protocols = (struct libwebsocket_protocols*)malloc(sizeof(struct libwebsocket_protocols) * 2);
-	memcpy(context_protocols, protocols, sizeof(struct libwebsocket_protocols) * 2);
+	context_protocols = (struct lws_protocols*)malloc(sizeof(struct lws_protocols) * 2);
+	memcpy(context_protocols, protocols, sizeof(struct lws_protocols) * 2);
 
 	info.port = acclGetWebSocketPort(technique_id);
 	info.iface = NULL;
@@ -444,7 +446,7 @@ struct libwebsocket_context* asclWebSocketInit(TECHNIQUE_ID technique_id) {
 	info.user = (void*)user_context;
 
 	// context creation
-	context = libwebsocket_create_context(&info);
+	context = lws_create_context(&info);
 
 	if (context == NULL) {
 		lwsl_err("libwebsocket init failed\n");
@@ -457,9 +459,9 @@ struct libwebsocket_context* asclWebSocketInit(TECHNIQUE_ID technique_id) {
 /**
  * Send / Exchange helper
  */
-int _asclWebSocketCommunicate(int wait_for_response, struct libwebsocket_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length, void* response, size_t* response_length) {
+int _asclWebSocketCommunicate(int wait_for_response, struct lws_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length, void* response, size_t* response_length) {
 	// prepare user context for sending callback
-	struct ascl_context_buffer* user_context = (struct ascl_context_buffer*)libwebsocket_context_user(context);
+	struct ascl_context_buffer* user_context = (struct ascl_context_buffer*)lws_context_user(context);
 	struct per_session_data__accl* session;
 
 	// buffer size check
@@ -480,18 +482,18 @@ int _asclWebSocketCommunicate(int wait_for_response, struct libwebsocket_context
 			strcpy(user_context->application_id, application_id);
 
 			// request a write session to libwebsocket for ACCL communication to a specific client
-			libwebsocket_callback_on_writable(context, session->wsi);
+			lws_callback_on_writable(session->wsi);
 
 			//lwsl_notice("ASCL - _asclWebSocketCommunicate(%s) write on channel requested\n", user_context->application_id);
 
 			while (1 == user_context->send_in_progress) {
-				libwebsocket_service(context, 50);
+				lws_service(context, 50);
 			}
 
 			//lwsl_notice("ASCL - _asclWebSocketCommunicate(%s) write on channel completed\n", user_context->application_id);
 
 			while (1 == user_context->wait_for_response) {
-				libwebsocket_service(context, 50);
+				lws_service(context, 50);
 			}
 
 			//lwsl_notice("ASCL - _asclWebSocketCommunicate(%s) wait for response passed\n", user_context->application_id);
@@ -521,7 +523,7 @@ int _asclWebSocketCommunicate(int wait_for_response, struct libwebsocket_context
 	Returns	ASCL_SUCCESS -> OK
 			ASCL_ERROR -> KO
 */
-int asclWebSocketSend(struct libwebsocket_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length) {
+int asclWebSocketSend(struct lws_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length) {
 	if (NULL == context)
 		return ASCL_ERROR;
 
@@ -530,7 +532,7 @@ int asclWebSocketSend(struct libwebsocket_context* context, char* application_id
 	return _asclWebSocketCommunicate(0, context, application_id, technique_id, buffer, buffer_length, NULL, 0);
 }
 
-int asclWebSocketExchange(struct libwebsocket_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length, void* response, size_t* response_length) {
+int asclWebSocketExchange(struct lws_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length, void* response, size_t* response_length) {
 	if (NULL == context)
 		return ASCL_ERROR;
 

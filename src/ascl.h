@@ -115,14 +115,14 @@ struct per_session_data__accl {
 	int inbound_send_pending;
 	void* pending_operation_buffer;
 	int pending_operation_buffer_size;
-	struct libwebsocket *wsi;
+	struct lws *wsi;
 };
 
 /* ASCL API prototypes */
-ASCL_EXTERN struct libwebsocket_context* asclWebSocketInit(TECHNIQUE_ID);
-ASCL_EXTERN int asclWebSocketSend(struct libwebsocket_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length);
-ASCL_EXTERN int asclWebSocketExchange(struct libwebsocket_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length, void*, size_t*);
-ASCL_EXTERN int asclWebSocketShutdown(struct libwebsocket_context*);
+ASCL_EXTERN struct lws_context* asclWebSocketInit(TECHNIQUE_ID);
+ASCL_EXTERN int asclWebSocketSend(struct lws_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length);
+ASCL_EXTERN int asclWebSocketExchange(struct lws_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length, void*, size_t*);
+ASCL_EXTERN int asclWebSocketShutdown(struct lws_context*);
 
 #ifdef ASCL_INTERNAL_DISPATCHER
 	static int asclWebSocketDispatcherMessage(TECHNIQUE_ID, char[1024], int, size_t, const char*, size_t*, const*);
