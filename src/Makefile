@@ -1,10 +1,8 @@
 CC=gcc
 
 PLATFORM=linux
-THIRD_PARTY=/opt/3rd_party
 
 CFLAGS=	-I. \
-		-I$(THIRD_PARTY)/libwebsockets/$(PLATFORM)/include \
 		-Wall \
 		-g
 

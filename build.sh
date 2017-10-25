@@ -10,11 +10,6 @@ build_dir=$1
 mkdir -p $build_dir
 cd $build_dir
 
-if [ ! -e /opt/3rd_party ]; then
-    echo "Directory 3rd_party not present!"
-    exit
-fi
-
 # Create extra symlinks
 ln -s $repo_dir/src $build_dir/include
 ln -s $repo_dir/src $build_dir/src
