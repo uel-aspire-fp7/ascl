@@ -118,8 +118,6 @@ struct per_session_data__accl {
 	struct libwebsocket *wsi;
 };
 
-LWS_EXTERN char* lws_hdr_simple_ptr(struct libwebsocket *wsi, enum lws_token_indexes h);
-
 /* ASCL API prototypes */
 ASCL_EXTERN struct libwebsocket_context* asclWebSocketInit(TECHNIQUE_ID);
 ASCL_EXTERN int asclWebSocketSend(struct libwebsocket_context* context, char* application_id, int technique_id, void* buffer, size_t buffer_length);

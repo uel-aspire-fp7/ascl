@@ -208,22 +208,26 @@ int static callback_accl_communication(
 	// user session data (T_ID, A_ID, ecc...)
 	struct per_session_data__accl* session_data = (struct per_session_data__accl*)user;
 
-	char *token, *request_uri;
+  char request_uri[256];
+  char* buffer = request_uri;
+  char *token;
 
 	//if (reason != LWS_CALLBACK_GET_THREAD_ID)
 	//	lwsl_notice("ASCL - callback_accl_communication %d\n", reason);
 
 	switch (reason) {
 		case LWS_CALLBACK_ESTABLISHED:			// initializing
+			if (sizeof(request_uri) <= lws_hdr_total_length(wsi, WSI_TOKEN_GET_URI))
+				break;
 
-			request_uri = lws_hdr_simple_ptr(wsi, WSI_TOKEN_GET_URI);
+			lws_hdr_copy(wsi, buffer, sizeof(request_uri), WSI_TOKEN_GET_URI);
 
 			lwsl_notice("ASCL - callback_accl_communication: LWS_CALLBACK_ESTABLISHED (URI: %s)\n", request_uri);
 
 			if (0 == lws_hdr_total_length(wsi, WSI_TOKEN_GET_URI))
 				break;
 
-			for(i = 0; (token = strsep(&request_uri, "/")) != NULL; i++) {
+			for(i = 0; (token = strsep(&buffer, "/")) != NULL; i++) {
 				switch (i) {
 					case 0:	// first item is empty by design
 						break;
