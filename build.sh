@@ -13,7 +13,6 @@ cd $build_dir
 # Create extra symlinks
 ln -s $repo_dir/src $build_dir/include
 ln -s $repo_dir/src $build_dir/src
-ln -s $repo_dir/src/aspire-portal $build_dir/
 
 # Create the objects
 cd $build_dir/src
